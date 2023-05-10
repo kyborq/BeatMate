@@ -1,6 +1,6 @@
-import {Slider} from '@miblanchard/react-native-slider';
-import React from 'react';
-import {StyleSheet, Text, View} from 'react-native';
+import { Slider } from '@miblanchard/react-native-slider';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
 type Props = {
   color?: string;
@@ -18,8 +18,8 @@ export const Progress: React.FC<Props> = ({
   duration,
   onRewind,
 }) => {
-  const trackStyle = {backgroundColor: !!color ? color : DEFAULT_COLOR};
-  const thumbStyle = {borderColor: !!color ? color : DEFAULT_COLOR};
+  const trackStyle = { backgroundColor: !!color ? color : DEFAULT_COLOR };
+  const thumbStyle = { borderColor: !!color ? color : DEFAULT_COLOR };
 
   const renderThumb = () => <View style={[styles.thumb, thumbStyle]}></View>;
 
@@ -40,11 +40,10 @@ export const Progress: React.FC<Props> = ({
         trackStyle={styles.track}
         minimumTrackStyle={trackStyle}
         value={progress}
-        // onValueChange={value => {
-        //   onRewind && onRewind(value[0]);
-        // }}
+        onValueChange={value => {
+          onRewind && onRewind(value[0]);
+        }}
         onSlidingComplete={value => {
-          console.log(value[0] * (duration || 0));
           onRewind && onRewind(value[0] * (duration || 0));
         }}
       />

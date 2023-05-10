@@ -1,168 +1,216 @@
-import React, {useEffect, useState} from 'react';
-import {StyleSheet, View, Text} from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { Touchable } from '../Touchable';
+import { IconButton } from '../IconButton';
+import { TrackCover } from '../Track/TrackCover';
+import { TMusic } from '../../models/musicModel';
+import { TrackInfo } from '../Track/TrackInfo';
 import Sound from 'react-native-sound';
-
-import {Header} from '../Header';
-import {Information} from './Information';
-import {Progress} from './Progress';
-import {Controls} from './Controls';
+import { BaseModal } from '../Modal/BaseModal';
+import { Progress } from './Progress';
+import useInterval from '../../hooks/useInterval';
+import { Controls } from './Controls';
+import { Information } from './Information';
 
 type Props = {
-  playlist: string[];
+  track?: TMusic;
+  onTrackEnd?: () => void;
+  onPlaylistEnd?: () => void;
 };
 
-export const Player: React.FC<Props> = ({playlist}) => {
-  const [sound, setSound] = useState<Sound>();
+export const Player: React.FC<Props> = ({
+  track,
+  onTrackEnd,
+  onPlaylistEnd,
+}) => {
+  const [currentSound, setCurrentSound] = useState<Sound>();
+  const [isPlaying, setPlaying] = useState(false);
+  const [maximized, setMaximize] = useState(true);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
 
-  const [playIndex, setPlayIndex] = useState(0);
+  const handleMaximize = () => setMaximize(true);
 
-  const [shuffle, setShuffle] = useState(false);
-  const [repeat, setRepeat] = useState(false);
-  const [playing, setPlaying] = useState(false);
-
-  const handleShuffle = () => setShuffle(!shuffle);
-  const handleRepeat = () => setRepeat(!repeat);
-
-  const handlePlay = () => setPlaying(true);
-  const handlePause = () => setPlaying(false);
-
-  const handleRewind = (value: number) => {
-    if (sound) {
-      setCurrentTime(value);
-      sound.setCurrentTime(value);
-    }
-  };
-
-  const handleNext = () => {
-    playIndex < playlist.length && setPlayIndex(playIndex + 1);
-    handlePlay();
-  };
-  const handlePrev = () => {
-    playIndex > 0 && setPlayIndex(playIndex - 1);
-    handlePlay();
-  };
-
-  useEffect(() => {
-    if (sound) {
-      sound.setCurrentTime(0);
-      sound.stop();
-      handlePause();
-    }
-
-    const newSound = new Sound(playlist[playIndex], Sound.MAIN_BUNDLE, () => {
-      setDuration(newSound.getDuration());
-      setSound(newSound);
-    });
-  }, [playIndex]);
-
-  useEffect(() => {
-    if (sound && playing) {
-      sound.play(() => {
-        if (playIndex < playlist.length) {
-          setPlayIndex(playIndex + 1);
-          sound.play();
-        }
+  useInterval(() => {
+    currentSound &&
+      currentSound.getCurrentTime(seconds => {
+        setCurrentTime(seconds);
       });
-      const intervalId = setInterval(() => {
-        sound.getCurrentTime(seconds => {
-          setCurrentTime(seconds);
-        });
-      }, 100);
-      return () => clearInterval(intervalId);
+  }, 100);
+
+  useEffect(() => {
+    setPlaying(false);
+    setCurrentSound(undefined);
+
+    if (!track) {
+      onPlaylistEnd && onPlaylistEnd();
+      return;
     }
 
-    if (sound && !playing) {
-      sound.pause();
+    currentSound && currentSound.release();
+
+    console.log('Track has changed to ' + (track?.title || track?.fileName));
+    setPlaying(false);
+    const sound = new Sound(
+      `${track.path}/${track.fileName}`,
+      Sound.MAIN_BUNDLE,
+      () => {
+        setCurrentSound(sound);
+        setDuration(sound.getDuration());
+        setPlaying(true);
+      },
+    );
+
+    return () => {
+      setPlaying(false);
+      currentSound && currentSound.release();
+      setCurrentSound(undefined);
+    };
+  }, [track]);
+
+  useEffect(() => {
+    return () => {
+      setPlaying(false);
+      currentSound && currentSound.release();
+      setCurrentSound(undefined);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (currentSound && isPlaying) {
+      currentSound?.play(() => {
+        setPlaying(false);
+        onTrackEnd && onTrackEnd();
+      });
     }
-  }, [playing]);
+
+    if (currentSound && !isPlaying) {
+      currentSound?.pause();
+    }
+  }, [isPlaying]);
+
+  const progress = duration ? currentTime / duration : 0;
 
   return (
-    <View style={styles.container}>
-      <Text>{`${playIndex + 1} / ${playlist.length}`}</Text>
-      <Progress
-        currentTime={currentTime}
-        duration={duration}
-        onRewind={handleRewind}
-      />
-      <Controls
-        isRepeat={repeat}
-        isShuffle={shuffle}
-        isPlaying={playing}
-        onShuffle={handleShuffle}
-        onRepeat={handleRepeat}
-        onPlay={handlePlay}
-        onPause={handlePause}
-        onNext={handleNext}
-        onPrevious={handlePrev}
-      />
+    <View style={styles.root}>
+      <Touchable
+        style={styles.player}
+        contentStyle={styles.content}
+        onPress={handleMaximize}
+      >
+        <View
+          style={[styles.playerProgress, { width: `${progress * 100}%` }]}
+        />
+        <View
+          style={{
+            paddingHorizontal: 16,
+            // paddingRight: 24,
+            flexDirection: 'row',
+            alignItems: 'center',
+            flex: 1,
+          }}
+        >
+          <View style={styles.info}>
+            <TrackCover darkContent image={track?.coverImage} />
+            <TrackInfo
+              author={track?.authorName || track?.path}
+              title={track?.title || track?.fileName}
+              darkContent
+            />
+          </View>
+
+          <View style={styles.actions}>
+            <IconButton icon="skipBack" color="#ffffff" />
+            <IconButton
+              icon={isPlaying ? 'pause' : 'play'}
+              color="#ffffff"
+              onPress={() => setPlaying(!isPlaying)}
+            />
+            <IconButton icon="skipForward" color="#ffffff" />
+          </View>
+        </View>
+      </Touchable>
+
+      {maximized && (
+        <BaseModal onClose={() => setMaximize(false)}>
+          <View style={{ flex: 1, paddingVertical: 24, paddingBottom: 32 }}>
+            <View
+              style={{
+                paddingHorizontal: 20,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+              }}
+            >
+              <IconButton icon="arrowDown" />
+              <IconButton icon="more" />
+            </View>
+            <Information
+              author={track?.authorName || track?.path}
+              cover={track?.coverImage}
+              title={track?.title || track?.fileName}
+            />
+            <Progress
+              currentTime={currentTime}
+              duration={duration}
+              onRewind={value => {
+                currentSound?.setCurrentTime(value);
+              }}
+              color="#FFD763"
+            />
+            <Controls
+              isPlaying={isPlaying}
+              onPlay={() => setPlaying(true)}
+              onPause={() => setPlaying(false)}
+              onNext={onTrackEnd}
+            />
+          </View>
+        </BaseModal>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    gap: 48,
-    paddingBottom: 32,
+  root: {
+    position: 'absolute',
+    bottom: 0,
+    width: '100%',
+    zIndex: 999,
+  },
+  playerProgress: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    backgroundColor: '#FFD763',
+    bottom: 0,
+  },
+  player: {
+    position: 'relative',
+    margin: 16,
+    flexDirection: 'row',
+    backgroundColor: '#FEC835',
+    borderRadius: 16,
+    shadowColor: '#c7c7c7',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.17,
+    shadowRadius: 3.05,
+    elevation: 6,
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: -10,
+  },
+  info: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: 16,
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
   },
 });
-
-//   const [sound, setSound] = useState<Sound>();
-//   const [currentTime, setCurrentTime] = useState<number>(0);
-//   const [isPlaying, setPlaying] = useState(false);
-
-//   const playSong = () => {
-//     sound &&
-//       sound.play(success => {
-//         if (success) {
-//           console.log('finished');
-//           setCurrentTime(0);
-//           setPlaying(false);
-//         }
-//       });
-//     setPlaying(true);
-//   };
-
-//   const pauseSong = () => {
-//     sound && sound.pause();
-//     setPlaying(false);
-//   };
-
-//   useEffect(() => {
-//     setSound(new Sound(music, Sound.MAIN_BUNDLE));
-//   }, []);
-
-//   useEffect(() => {
-//     if (isPlaying) {
-//       const intervalId = setInterval(() => {
-//         sound?.getCurrentTime(seconds => {
-//           setCurrentTime(seconds);
-//         });
-//         sound;
-//       }, 100);
-//       return () => clearInterval(intervalId);
-//     }
-//   }, [isPlaying]);
-
-//   return (
-//     <View style={{flexGrow: 1, gap: 48, paddingBottom: 32}}>
-//       <Header leftIcon="close" title="Плеер" rightIcon="more" />
-//       <View style={{flex: 1}}>
-//         <Information cover="" title="Some music..." author="Dunno..." />
-//       </View>
-//       <Progress
-//         color="#000000"
-//         currentTime={currentTime}
-//         duration={sound && sound.getDuration()}
-//         onRewind={value => {
-//           setCurrentTime(value);
-//           sound?.setCurrentTime(value);
-//           // playSong();
-//         }}
-//       />
-//       <Controls isPlaying={isPlaying} onPlay={playSong} onPause={pauseSong} />
-//     </View>
-//   );
-// };

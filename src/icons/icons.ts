@@ -1,27 +1,27 @@
+import appLogo from './app-logo.svg';
 import play from './play.svg';
-import skipLeft from './skip-left.svg';
-import skipRight from './skip-right.svg';
-import repeat from './repeat.svg';
-import shuffle from './shuffle.svg';
-import more from './more.svg';
-import close from './close.svg';
 import pause from './pause.svg';
+import music from './music.svg';
+import skipForward from './skip-forward.svg';
+import skipBack from './skip-back.svg';
 import user from './user.svg';
-import search from './search.svg';
-import dropDown from './drop-down.svg';
+import more from './more.svg';
+import shuffle from './shuffle.svg';
+import repeat from './repeat.svg';
+import arrowDown from './arrow-down.svg';
 
 export const icons = {
+  appLogo,
   play,
-  skipLeft,
-  skipRight,
-  repeat,
-  shuffle,
-  more,
-  close,
-  pause,
+  music,
+  skipForward,
+  skipBack,
   user,
-  search,
-  dropDown,
+  more,
+  pause,
+  shuffle,
+  repeat,
+  arrowDown,
 };
 
 export type TIcon = keyof typeof icons;

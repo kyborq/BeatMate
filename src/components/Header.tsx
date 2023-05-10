@@ -1,34 +1,35 @@
 import React from 'react';
-import {StyleSheet, Text, View} from 'react-native';
-import {TIcon} from '../icons/icons';
-import {Icon} from './Icon';
+import { StyleSheet, Text, View } from 'react-native';
+import { Icon } from './Icon';
+import { IconButton } from './IconButton';
 
-type Props = {
-  leftIcon?: TIcon;
-  rightIcon?: TIcon;
-  title: string;
-};
-
-export const Header: React.FC<Props> = ({title, leftIcon, rightIcon}) => {
+export const Header = () => {
   return (
     <View style={styles.header}>
-      {leftIcon && <Icon name={leftIcon} />}
-      <Text style={styles.title}>{title}</Text>
-      {rightIcon && <Icon name={rightIcon} />}
+      <View style={styles.info}>
+        <Icon name="appLogo" size={48} />
+        <Text style={styles.title}>Мьюзик</Text>
+      </View>
+      <IconButton icon="user" background="#e2e2e2" color="#c7c7c7" />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     paddingHorizontal: 32,
     paddingVertical: 24,
+    flexDirection: 'row',
+    backgroundColor: '#f2f2f2',
+  },
+  info: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: 16,
     alignItems: 'center',
   },
   title: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#000000',
   },

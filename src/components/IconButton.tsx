@@ -1,46 +1,47 @@
 import React from 'react';
-import {TIcon} from '../icons/icons';
-import {StyleSheet, TouchableNativeFeedback, View} from 'react-native';
-import {Icon} from './Icon';
+import { StyleSheet, ViewStyle } from 'react-native';
+import { Touchable } from './Touchable';
+import { Icon } from './Icon';
+import { TIcon } from '../icons/icons';
 
 type Props = {
-  icon: TIcon;
   size?: number;
-  backgroundColor?: string;
-  foregroundColor?: string;
+  icon: TIcon;
+  color?: string;
+  background?: string;
   onPress?: () => void;
 };
 
+const DEFAULT_SIZE = 48;
+
 export const IconButton: React.FC<Props> = ({
+  onPress,
   icon,
   size,
-  backgroundColor,
-  foregroundColor,
-  onPress,
+  color,
+  background,
 }) => {
-  const buttonSize = {width: size || 48, height: size || 48};
+  const buttonSize = size || DEFAULT_SIZE;
+  const buttonStyle: ViewStyle = {
+    width: buttonSize,
+    height: buttonSize,
+    borderRadius: buttonSize / 2,
+    backgroundColor: background,
+  };
 
   return (
-    <View style={[styles.base, buttonSize]}>
-      <TouchableNativeFeedback onPress={onPress}>
-        <View style={[styles.button, buttonSize, {backgroundColor}]}>
-          <Icon name={icon} fill={foregroundColor} />
-        </View>
-      </TouchableNativeFeedback>
-    </View>
+    <Touchable
+      style={buttonStyle}
+      contentStyle={styles.content}
+      onPress={onPress}
+    >
+      <Icon name={icon} fill={color || '#000000'} />
+    </Touchable>
   );
 };
 
 const styles = StyleSheet.create({
-  base: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    overflow: 'hidden',
-  },
-  button: {
-    width: 80,
-    height: 80,
+  content: {
     justifyContent: 'center',
     alignItems: 'center',
   },

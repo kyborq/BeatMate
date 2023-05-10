@@ -1,6 +1,6 @@
 import React from 'react';
-import {StyleSheet, View} from 'react-native';
-import {IconButton} from '../IconButton';
+import { StyleSheet, View } from 'react-native';
+import { IconButton } from '../IconButton';
 
 type Props = {
   isPlaying?: boolean;
@@ -29,23 +29,23 @@ export const Controls: React.FC<Props> = ({
     <View style={styles.container}>
       <IconButton
         icon="shuffle"
-        foregroundColor={isShuffle ? '#000000' : '#c7c7c7'}
+        color={isShuffle ? '#FFD763' : '#c7c7c7'}
         onPress={onShuffle}
       />
       <View style={styles.controls}>
-        <IconButton icon="skipLeft" onPress={onPrevious} />
+        <IconButton color="#c7c7c7" icon="skipBack" onPress={onPrevious} />
         <IconButton
           icon={isPlaying ? 'pause' : 'play'}
           size={64}
-          backgroundColor="#000000"
-          foregroundColor="#ffffff"
+          background="#FFD763"
+          color="#ffffff"
           onPress={isPlaying ? onPause : onPlay}
         />
-        <IconButton icon="skipRight" onPress={onNext} />
+        <IconButton color="#c7c7c7" icon="skipForward" onPress={onNext} />
       </View>
       <IconButton
         icon="repeat"
-        foregroundColor={isRepeat ? '#000000' : '#c7c7c7'}
+        color={isRepeat ? '#FFD763' : '#c7c7c7'}
         onPress={onRepeat}
       />
     </View>

@@ -1,13 +1,23 @@
 import React from 'react';
-import {Image, StyleSheet, Text, View} from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
+import { parseMusicFilename } from '../Track/TrackInfo';
 
 type Props = {
   cover?: string;
   title?: string;
   author?: string;
+
+  darkContent?: boolean;
 };
 
-export const Information: React.FC<Props> = ({author, cover, title}) => {
+export const Information: React.FC<Props> = ({
+  author,
+  cover,
+  title,
+  darkContent,
+}) => {
+  const normalInfo = author && title && parseMusicFilename(title, author);
+
   return (
     <View style={styles.container}>
       <View style={styles.imageContainer}>
@@ -21,8 +31,17 @@ export const Information: React.FC<Props> = ({author, cover, title}) => {
         />
       </View>
       <View style={styles.information}>
-        <Text style={styles.title}>{title || 'Unknown'}</Text>
-        <Text style={styles.author}>by {author || 'Unknown'}</Text>
+        <Text style={[styles.title, darkContent && { color: '#ffffff' }]}>
+          {(normalInfo && normalInfo.title) || 'Unknown'}
+        </Text>
+        <Text
+          style={[
+            styles.author,
+            darkContent && { color: 'rgba(255, 255, 255, 0.7)' },
+          ]}
+        >
+          {(normalInfo && normalInfo.author) || 'Unknown'}
+        </Text>
       </View>
     </View>
   );

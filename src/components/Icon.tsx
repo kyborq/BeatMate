@@ -1,12 +1,13 @@
 import React from 'react';
-import {TIcon, icons} from '../icons/icons';
+import { TIcon, icons } from '../icons/icons';
 
 type Props = {
   name: TIcon;
   fill?: string;
+  size?: number;
 };
 
-export const Icon: React.FC<Props> = ({name, fill}) => {
+export const Icon: React.FC<Props> = ({ name, fill, size }) => {
   const IconComponent = icons[name];
-  return <IconComponent fill={fill} width={24} height={24} />;
+  return <IconComponent fill={fill} width={size || 24} height={size || 24} />;
 };

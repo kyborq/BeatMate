@@ -1,122 +1,102 @@
-import React, {useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  Image,
+  NativeModules,
+  FlatList,
   SafeAreaView,
-  ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
-import {IconButton} from './components/IconButton';
-import {TextField} from './components/Form/TextField';
-import {Chip} from './components/Chip';
+import { Player } from './components/Player/Player';
+import { Header } from './components/Header';
+import { TabPages } from './components/TabPages';
+import { TrackItem } from './components/Track/TrackItem';
+import { TMusic } from './models/musicModel';
+import { requestReadStoragePermission } from './permissions/storagePermissions';
 
 export const App = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [playList, setPlayList] = useState<TMusic[]>([]);
+  const [currentTrack, setTrack] = useState<TMusic>();
+  const [isPlayerVisible, setPlayerVisible] = useState(false);
+
+  const { MusicScanner, MusicInfo } = NativeModules;
+
+  const nextTrack = () => {
+    if (currentTrack) {
+      const currentIndex = playList.indexOf(currentTrack);
+      if (currentIndex < playList.length) {
+        setTrack(playList[currentIndex + 1]);
+      }
+    }
+  };
+
+  useEffect(() => {
+    requestReadStoragePermission().then(() => {
+      MusicScanner.scanMusic().then((result: any) => {
+        const musicList = result as TMusic[];
+
+        MusicInfo.getMusicInfoArray(musicList).then((result: any) => {
+          const music = result as TMusic[];
+          setPlayList(music);
+        });
+      });
+    });
+  }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Soundeer</Text>
-        <IconButton
-          icon="user"
-          foregroundColor="#000000"
-          backgroundColor="#e2e2e2"
-        />
-      </View>
-      <View style={styles.search}>
-        <TextField
-          icon="search"
-          placeholder="Поиск..."
-          value={searchQuery}
-          onChange={setSearchQuery}
-        />
-      </View>
-
+    <SafeAreaView style={styles.root}>
+      <Header />
       <View style={styles.content}>
-        <Text style={styles.contentTitle}>Музыкотека</Text>
-      </View>
+        <TabPages pages={['Библиотека']} current="Библиотека" />
 
-      <View style={styles.filtersBase}>
-        <ScrollView
-          contentContainerStyle={styles.filtersContainer}
-          showsHorizontalScrollIndicator={false}
-          horizontal>
-          <View style={styles.filters}>
-            {!!searchQuery && (
-              <Chip label={`Поиск: ${searchQuery}`} icon="close" />
-            )}
-            <Chip label="Сортировка: По дате" icon="dropDown" />
-            <Chip label="Фильтры: Нет" icon="dropDown" />
-            <Chip label="Папки: Все" icon="dropDown" />
-          </View>
-        </ScrollView>
-      </View>
-
-      <View style={{flex: 1}}>
-        <ScrollView contentContainerStyle={{flexGrow: 1}}>
-          <View
-            style={{
-              flex: 1,
-              gap: 64,
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}>
-            <Image
-              source={{
-                uri: 'https://media.tenor.com/J3mNIbj6A4wAAAAd/empty-shelves-john-travolta.gif',
-              }}
-              style={{
-                width: 256,
-                height: 256,
+        <FlatList
+          data={playList}
+          contentContainerStyle={{ paddingBottom: 100 }}
+          renderItem={({ item, index }) => (
+            <TrackItem
+              key={index}
+              track={item}
+              isCurrent={
+                currentTrack && playList.indexOf(currentTrack) === index
+              }
+              onPress={() => {
+                setTrack(item);
+                setPlayerVisible(true);
               }}
             />
-            <Text style={{fontSize: 16, color: '#c7c7c7'}}>Пустовато...</Text>
-          </View>
-        </ScrollView>
+          )}
+        />
       </View>
+      {isPlayerVisible && (
+        <Player
+          track={currentTrack}
+          onTrackEnd={nextTrack}
+          onPlaylistEnd={() => {
+            setTrack(undefined);
+            setPlayerVisible(false);
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
     backgroundColor: '#f2f2f2',
   },
   content: {
-    paddingTop: 24,
-    paddingHorizontal: 32,
+    flex: 1,
+    backgroundColor: '#ffffff',
+    borderTopStartRadius: 16,
+    borderTopEndRadius: 16,
+    shadowColor: '#c7c7c7',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.17,
+    shadowRadius: 3.05,
+    elevation: 4,
   },
-  contentTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000000',
-  },
-  header: {
-    paddingHorizontal: 32,
-    paddingVertical: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  title: {
-    fontSize: 24,
-    color: '#000000',
-    fontWeight: 'bold',
-  },
-  search: {
-    paddingHorizontal: 32,
-  },
-  filtersContainer: {
-    paddingHorizontal: 32,
-    paddingVertical: 8,
-  },
-  filters: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  filtersBase: {},
 });
-
-export default App;
