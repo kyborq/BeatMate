@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, StyleSheet } from 'react-native';
+import { SafeAreaView, StyleSheet, View } from 'react-native';
+
 import { Header } from './components/Header';
-import { View } from 'react-native';
 import { PlayList } from './components/PlayList';
-import { getMusicFromFolders, IMusicFile } from './utils/musicUtils';
 import { TabPages } from './components/TabPages';
 import { Player } from './components/Player/Player';
+
+import { getMusicFromFolders, IMusicFile } from './utils/musicUtils';
 
 export const App = () => {
   const [musicList, setMusicList] = useState<IMusicFile[]>([]);

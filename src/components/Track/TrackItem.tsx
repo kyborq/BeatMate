@@ -1,13 +1,11 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { TrackCover } from './TrackCover';
-import { TrackInfo } from './TrackInfo';
+import { StyleSheet } from 'react-native';
 import { IconButton } from '../IconButton';
 import { Touchable } from '../Touchable';
-import { TMusic } from '../../models/musicModel';
+import { IMusicFile } from '../../utils/musicUtils';
 
 type Props = {
-  track: TMusic;
+  track: IMusicFile;
   isCurrent?: boolean;
   onPress?: () => void;
 };
@@ -19,11 +17,11 @@ export const TrackItem: React.FC<Props> = ({ track, isCurrent, onPress }) => {
       contentStyle={styles.content}
       onPress={onPress}
     >
-      <TrackCover image={track.coverImage} isPlaying={isCurrent} />
+      {/* <TrackCover image={track.coverImage} isPlaying={isCurrent} />
       <TrackInfo
         title={track.title || track.fileName}
         author={track.authorName || track.path}
-      />
+      /> */}
       <IconButton icon="more" color="#c7c7c7" />
     </Touchable>
   );

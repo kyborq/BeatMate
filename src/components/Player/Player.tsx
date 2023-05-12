@@ -1,19 +1,17 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import Sound from 'react-native-sound';
+
 import { Touchable } from '../Touchable';
 import { IconButton } from '../IconButton';
-import { TrackCover } from '../Track/TrackCover';
-import { TMusic } from '../../models/musicModel';
-import { TrackInfo } from '../Track/TrackInfo';
-import Sound from 'react-native-sound';
 import { BaseModal } from '../Modal/BaseModal';
 import { Progress } from './Progress';
-import useInterval from '../../hooks/useInterval';
 import { Controls } from './Controls';
-import { Information } from './Information';
+import { IMusicFile } from '../../utils/musicUtils';
+import useInterval from '../../hooks/useInterval';
 
 type Props = {
-  track?: TMusic;
+  track?: IMusicFile;
   onTrackEnd?: () => void;
   onPlaylistEnd?: () => void;
 };
@@ -49,7 +47,6 @@ export const Player: React.FC<Props> = ({
 
     currentSound && currentSound.release();
 
-    console.log('Track has changed to ' + (track?.title || track?.fileName));
     setPlaying(false);
     const sound = new Sound(
       `${track.path}/${track.fileName}`,
@@ -104,21 +101,11 @@ export const Player: React.FC<Props> = ({
         <View
           style={{
             paddingHorizontal: 16,
-            // paddingRight: 24,
             flexDirection: 'row',
             alignItems: 'center',
             flex: 1,
           }}
         >
-          <View style={styles.info}>
-            <TrackCover darkContent image={track?.coverImage} />
-            <TrackInfo
-              author={track?.authorName || track?.path}
-              title={track?.title || track?.fileName}
-              darkContent
-            />
-          </View>
-
           <View style={styles.actions}>
             <IconButton icon="skipBack" color="#ffffff" />
             <IconButton
@@ -144,11 +131,6 @@ export const Player: React.FC<Props> = ({
               <IconButton icon="arrowDown" />
               <IconButton icon="more" />
             </View>
-            <Information
-              author={track?.authorName || track?.path}
-              cover={track?.coverImage}
-              title={track?.title || track?.fileName}
-            />
             <Progress
               currentTime={currentTime}
               duration={duration}
