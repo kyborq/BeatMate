@@ -28,30 +28,34 @@ public class MusicScannerModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void scanMusic(Promise promise) {
+  public void scanFolders(List<String> folders, Promise promise) {
     try {
       ContentResolver contentResolver = getReactApplicationContext().getContentResolver();
 
       Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
       String[] projection = {
-        MediaStore.Audio.Media.DATA,
-        MediaStore.Audio.Media.DISPLAY_NAME
+          MediaStore.Audio.Media.DATA,
+          MediaStore.Audio.Media.DISPLAY_NAME,
+          MediaStore.Audio.Media.DURATION
       };
 
-      Cursor cursor = contentResolver.query(uri, projection, null, null, null);
+      String selection = MediaStore.Audio.Media.DATA + " LIKE ?";
+      String[] selectionArgs = new String[folders.size()];
+      for (int i = 0; i < folders.size(); i++) {
+        selectionArgs[i] = folders.get(i) + "%";
+      }
 
+      Cursor cursor = contentResolver.query(uri, projection, selection, selectionArgs, null);
       WritableArray result = Arguments.createArray();
 
       if (cursor != null) {
         while (cursor.moveToNext()) {
-          String filePath = cursor.getString(0);
-          String fileName = cursor.getString(1);
-          if (filePath.endsWith(".mp3")) {
-            int index = filePath.lastIndexOf("/");
-            String path = filePath.substring(0, index);
-            WritableMap fileInfo = Arguments.createMap();
-            fileInfo.putString("fileName", fileName);
-            fileInfo.putString("path", path);
+          String filePath = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA));
+          String fileName = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME));
+          long duration = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION));
+
+          if (filePath != null && filePath.endsWith(".mp3")) {
+            WritableMap fileInfo = createFileInfo(fileName, filePath, duration);
             result.pushMap(fileInfo);
           }
         }
@@ -61,63 +65,77 @@ public class MusicScannerModule extends ReactContextBaseJavaModule {
 
       promise.resolve(result);
     } catch (Exception e) {
-      promise.reject(e.getMessage());
+      promise.reject(e);
     }
   }
 
   @ReactMethod
-  public void scanMusicFromFolder(ReadableArray folders, Promise promise) {
+  public void scanMusic(Promise promise) {
     try {
       ContentResolver contentResolver = getReactApplicationContext().getContentResolver();
 
       Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
       String[] projection = {
-              MediaStore.Audio.Media.DATA
+          MediaStore.Audio.Media.DATA,
+          MediaStore.Audio.Media.DISPLAY_NAME,
+          MediaStore.Audio.Media.DURATION
       };
 
-      // Build selection string based on folders
-      StringBuilder selectionBuilder = new StringBuilder();
-      for (int i = 0; i < folders.size(); i++) {
-          String folder = folders.getString(i);
-          if (folder != null && !folder.isEmpty()) {
-              selectionBuilder.append(MediaStore.Audio.Media.DATA + " LIKE ?");
-              if (i < folders.size() - 1) {
-                  selectionBuilder.append(" OR ");
-              }
-          }
-      }
-
-      String[] selectionArgs = new String[folders.size()];
-      for (int i = 0; i < folders.size(); i++) {
-          String folder = folders.getString(i);
-          if (folder != null && !folder.isEmpty()) {
-              selectionArgs[i] = "%" + folder + "%";
-          }
-      }
-
-      String selection = selectionBuilder.toString();
-      String[] selectionArgsCleaned = Arrays.stream(selectionArgs)
-              .filter(Objects::nonNull)
-              .toArray(String[]::new);
-
-      Cursor cursor = contentResolver.query(uri, projection, selection, selectionArgsCleaned, null);
-
+      Cursor cursor = contentResolver.query(uri, projection, null, null, null);
       WritableArray result = Arguments.createArray();
 
       if (cursor != null) {
-          while (cursor.moveToNext()) {
-              String filePath = cursor.getString(0);
-              if (filePath.endsWith(".mp3")) {
-                  result.pushString(filePath);
-              }
-          }
+        while (cursor.moveToNext()) {
+          String filePath = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA));
+          String fileName = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME));
+          long duration = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION));
 
-          cursor.close();
+          if (filePath != null && filePath.endsWith(".mp3")) {
+            WritableMap fileInfo = createFileInfo(fileName, filePath, duration);
+            result.pushMap(fileInfo);
+          }
+        }
+
+        cursor.close();
       }
 
       promise.resolve(result);
     } catch (Exception e) {
-      promise.reject(e.getMessage());
+      promise.reject(e);
     }
+  }
+
+  private WritableMap createFileInfo(String fileName, String filePath, long duration) {
+    int index = filePath.lastIndexOf("/");
+    String path = filePath.substring(0, index);
+
+    WritableMap fileInfo = Arguments.createMap();
+    fileInfo.putString("fileName", fileName);
+    fileInfo.putString("path", path);
+    fileInfo.putDouble("duration", duration / 1000.0);
+
+    WritableMap authorAndTitle = parseAuthorAndTitle(fileName);
+    fileInfo.putMap("authorAndTitle", authorAndTitle);
+
+    return fileInfo;
+  }
+
+  private WritableMap parseAuthorAndTitle(String fileName) {
+    WritableMap authorAndTitle = Arguments.createMap();
+
+    int hyphenIndex = fileName.indexOf("-");
+
+    if (hyphenIndex >= 0) {
+      String author = fileName.substring(0, hyphenIndex).trim();
+      String title = fileName.substring(hyphenIndex + 1, fileName.length() - 4).trim();
+
+      authorAndTitle.putString("author", author);
+      authorAndTitle.putString("title", title);
+    } else {
+      authorAndTitle.putNull("author");
+      authorAndTitle.putNull("title");
+    }
+
+    return authorAndTitle;
   }
 }

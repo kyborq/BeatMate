@@ -1,16 +1,18 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Icon } from './Icon';
-import { IconButton } from './IconButton';
 
-export const Header = () => {
+type Props = {
+  title: string;
+};
+
+export const Header: React.FC<Props> = ({ title }) => {
   return (
     <View style={styles.header}>
       <View style={styles.info}>
         <Icon name="appLogo" size={48} />
-        <Text style={styles.title}>Мьюзик</Text>
+        <Text style={styles.title}>{title}</Text>
       </View>
-      <IconButton icon="user" background="#e2e2e2" color="#c7c7c7" />
     </View>
   );
 };

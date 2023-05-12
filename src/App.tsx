@@ -1,81 +1,36 @@
 import React, { useEffect, useState } from 'react';
-import {
-  NativeModules,
-  FlatList,
-  SafeAreaView,
-  StyleSheet,
-  View,
-} from 'react-native';
-import { Player } from './components/Player/Player';
+import { SafeAreaView, StyleSheet } from 'react-native';
 import { Header } from './components/Header';
+import { View } from 'react-native';
+import { PlayList } from './components/PlayList';
+import { getMusicFromFolders, IMusicFile } from './utils/musicUtils';
 import { TabPages } from './components/TabPages';
-import { TrackItem } from './components/Track/TrackItem';
-import { TMusic } from './models/musicModel';
-import { requestReadStoragePermission } from './permissions/storagePermissions';
+import { Player } from './components/Player/Player';
 
 export const App = () => {
-  const [playList, setPlayList] = useState<TMusic[]>([]);
-  const [currentTrack, setTrack] = useState<TMusic>();
-  const [isPlayerVisible, setPlayerVisible] = useState(false);
+  const [musicList, setMusicList] = useState<IMusicFile[]>([]);
+  const [selectedTrack, setSelectedTrack] = useState<IMusicFile>();
+  const [playerVisible, setPlayerVisible] = useState(false);
 
-  const { MusicScanner, MusicInfo } = NativeModules;
-
-  const nextTrack = () => {
-    if (currentTrack) {
-      const currentIndex = playList.indexOf(currentTrack);
-      if (currentIndex < playList.length) {
-        setTrack(playList[currentIndex + 1]);
-      }
+  const getLocalMusic = async () => {
+    const result = await getMusicFromFolders(['Music']);
+    if (result) {
+      setMusicList(result);
     }
   };
 
   useEffect(() => {
-    requestReadStoragePermission().then(() => {
-      MusicScanner.scanMusic().then((result: any) => {
-        const musicList = result as TMusic[];
-
-        MusicInfo.getMusicInfoArray(musicList).then((result: any) => {
-          const music = result as TMusic[];
-          setPlayList(music);
-        });
-      });
-    });
+    getLocalMusic();
   }, []);
 
   return (
     <SafeAreaView style={styles.root}>
-      <Header />
-      <View style={styles.content}>
-        <TabPages pages={['Библиотека']} current="Библиотека" />
-
-        <FlatList
-          data={playList}
-          contentContainerStyle={{ paddingBottom: 100 }}
-          renderItem={({ item, index }) => (
-            <TrackItem
-              key={index}
-              track={item}
-              isCurrent={
-                currentTrack && playList.indexOf(currentTrack) === index
-              }
-              onPress={() => {
-                setTrack(item);
-                setPlayerVisible(true);
-              }}
-            />
-          )}
-        />
+      <Header title="Музыка" />
+      <View style={styles.page}>
+        <TabPages current="Устройство" pages={['Устройство']} />
+        <PlayList musicFiles={musicList} />
       </View>
-      {isPlayerVisible && (
-        <Player
-          track={currentTrack}
-          onTrackEnd={nextTrack}
-          onPlaylistEnd={() => {
-            setTrack(undefined);
-            setPlayerVisible(false);
-          }}
-        />
-      )}
+      {playerVisible && <Player />}
     </SafeAreaView>
   );
 };
@@ -85,7 +40,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f2f2f2',
   },
-  content: {
+  page: {
     flex: 1,
     backgroundColor: '#ffffff',
     borderTopStartRadius: 16,
