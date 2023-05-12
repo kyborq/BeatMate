@@ -11,6 +11,7 @@ export const App = () => {
   const [musicList, setMusicList] = useState<IMusicFile[]>([]);
   const [selectedTrack, setSelectedTrack] = useState<IMusicFile>();
   const [playerVisible, setPlayerVisible] = useState(false);
+  const [tabPage, setTabPage] = useState('Устройство');
 
   const getLocalMusic = async () => {
     const result = await getMusicFromFolders(['Music']);
@@ -20,14 +21,14 @@ export const App = () => {
   };
 
   useEffect(() => {
-    getLocalMusic();
-  }, []);
+    tabPage === 'Устройство' && getLocalMusic();
+  }, [tabPage]);
 
   return (
     <SafeAreaView style={styles.root}>
       <Header title="Музыка" />
       <View style={styles.page}>
-        <TabPages current="Устройство" pages={['Устройство']} />
+        <TabPages current={tabPage} pages={['Устройство']} />
         <PlayList musicFiles={musicList} />
       </View>
       {playerVisible && <Player />}

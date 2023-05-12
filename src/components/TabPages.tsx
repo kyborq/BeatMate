@@ -1,26 +1,28 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { v4 as uuidv4 } from 'uuid';
+import { FlatList, StyleSheet, View } from 'react-native';
+import { TabButton } from './TabButton';
 
 type Props = {
   pages: string[];
   current: string;
+  onSelect?: (value: string) => void;
 };
 
-export const TabPages: React.FC<Props> = ({ pages, current }) => {
+export const TabPages: React.FC<Props> = ({ pages, current, onSelect }) => {
   return (
     <View style={styles.content}>
-      {pages.map(page => {
-        return (
-          <TouchableOpacity key={uuidv4()} onPress={() => {}}>
-            <Text
-              style={[styles.title, current === page && { color: '#000000' }]}
-            >
-              {page}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
+      <FlatList
+        data={pages}
+        renderItem={({ item }) => (
+          <TabButton
+            title={item}
+            current={item === current}
+            onPress={onSelect}
+          />
+        )}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+      />
     </View>
   );
 };
@@ -32,10 +34,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     paddingTop: 24,
     paddingBottom: 12,
-  },
-  title: {
-    color: '#c7c7c7',
-    fontSize: 18,
-    fontWeight: 'bold',
   },
 });
