@@ -1,5 +1,5 @@
 import React from 'react';
-import { TIcon, icons } from '../icons/icons';
+import { TIcon, icons } from '../../icons/icons';
 
 type Props = {
   name: TIcon;
@@ -9,5 +9,5 @@ type Props = {
 
 export const Icon: React.FC<Props> = ({ name, fill, size }) => {
   const IconComponent = icons[name];
-  return <IconComponent fill={fill} width={size || 24} height={size || 24} />;
+  return <IconComponent fill={fill} />;
 };
