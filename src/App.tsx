@@ -1,15 +1,27 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
+import { StyleSheet, View } from 'react-native';
+import { Provider } from 'react-redux';
+
 import { TabNavigator } from './components/navigation';
-import { View } from 'react-native';
 import { COLORS } from './colors';
+import { store } from './redux';
 
 export const App = () => {
   return (
-    <NavigationContainer>
-      <View style={{ backgroundColor: COLORS.background, flex: 1 }}>
-        <TabNavigator />
-      </View>
-    </NavigationContainer>
+    <Provider store={store}>
+      <NavigationContainer>
+        <View style={styles.root}>
+          <TabNavigator />
+        </View>
+      </NavigationContainer>
+    </Provider>
   );
 };
+
+const styles = StyleSheet.create({
+  root: {
+    backgroundColor: COLORS.background,
+    flex: 1,
+  },
+});
