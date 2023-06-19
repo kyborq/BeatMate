@@ -6,6 +6,7 @@ import { Provider } from 'react-redux';
 import { TabNavigator } from './components/navigation';
 import { COLORS } from './colors';
 import { store } from './redux';
+import locale from './translations';
 
 export const App = () => {
   return (
